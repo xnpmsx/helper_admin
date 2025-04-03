@@ -1,0 +1,52 @@
+# เปิดใช้งาน PHP บนเซิร์ฟเวอร์
+AddHandler application/x-httpd-php .php
+AddType application/x-httpd-php .php
+
+# กำหนดให้โหลดไฟล์ index.php เป็นหน้าแรก
+DirectoryIndex index.php
+
+# ป้องกันการเข้าถึงไฟล์ .htaccess โดยตรง
+<Files .htaccess>
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# ป้องกันการเข้าถึงไฟล์ PHP ที่สำคัญ เช่น config.php
+<FilesMatch "^(config|database|secret)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# เปิดใช้งาน URL Rewrite (ใช้สำหรับลบ .php ออกจาก URL)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ถ้าผู้ใช้เข้าผ่าน URL ที่ไม่มีไฟล์จริง ให้ส่งไปที่ index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+
+    # ตัวอย่าง: เปลี่ยนจาก yourwebsite.com/page.php?id=123 เป็น yourwebsite.com/page/123
+    RewriteRule ^page/([0-9]+)$ page.php?id=$1 [L]
+</IfModule>
+
+# ป้องกันการเรียกดูไฟล์ที่ไม่ต้องการ
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|bak)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# เปิดใช้งาน Gzip Compression (ช่วยให้โหลดเว็บเร็วขึ้น)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# ปรับแต่ง Caching เพื่อลดการโหลดไฟล์ซ้ำ
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+</IfModule>
